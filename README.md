@@ -42,7 +42,7 @@ TaskFlow intentionally provides the following execution guarantees:
   Failed jobs follow a predictable exponential backoff policy with bounded retries.
 
 ---
-
+```
 ## High-Level Architecture
 
 Client
@@ -56,7 +56,7 @@ TaskFlow API
           |
           v
    TaskFlow Workers (N instances)
-
+```
 ---
 
 ## Tech Stack
@@ -246,3 +246,4 @@ The system is intentionally scoped to be deep rather than broad, focusing on the
 
 Vidhi Babariya  
 Software Engineer - Backend and Distributed Systems
+
