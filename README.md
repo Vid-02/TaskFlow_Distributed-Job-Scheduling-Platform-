@@ -42,6 +42,26 @@ TaskFlow intentionally provides the following execution guarantees:
   Failed jobs follow a predictable exponential backoff policy with bounded retries.
 
 ---
+
+## Operational Model
+
+TaskFlow follows a clear separation between **control plane** and **execution plane** responsibilities.
+
+- The **TaskFlow API** acts as the control plane:
+  - Accepts job submissions
+  - Validates inputs
+  - Persists durable job metadata
+  - Exposes job lifecycle and status APIs
+
+- The **TaskFlow Workers** act as the execution plane:
+  - Poll for executable jobs
+  - Compete for distributed leases
+  - Execute jobs in isolation
+  - Report results back to durable storage
+
+This separation ensures that API availability is not coupled to job execution throughput, enabling independent scaling and failure isolation.
+
+---
 ```
 ## High-Level Architecture
 
@@ -193,6 +213,27 @@ Provides lightweight, fast coordination primitives to ensure safe execution unde
 
 ---
 
+## Failure Scenarios Handled
+
+TaskFlow is designed to behave safely under common real-world failure conditions:
+
+- **Worker crash during execution**  
+  Redis leases expire automatically, allowing another worker to safely retry the job.
+
+- **API process restart**  
+  All job state is recovered from PostgreSQL with no in-memory dependency.
+
+- **Duplicate execution attempts**  
+  Lease-based coordination ensures only one active executor per job at any time.
+
+- **Transient database or network failures**  
+  Jobs remain in a retriable state and follow deterministic backoff policies.
+
+- **Redis restart**  
+  No durable state is lost; leases are re-established safely from PostgreSQL state.
+
+---
+
 ## Running Locally
 
 ### Prerequisites
@@ -234,6 +275,20 @@ Cleanup:
 
 ---
 
+## Non-Goals
+
+This project intentionally does NOT attempt to solve the following problems:
+
+- Exactly-once execution semantics
+- Distributed transactions across services
+- Workflow orchestration or DAG scheduling
+- Long-running streaming workloads
+- Cron-based or time-triggered scheduling
+
+These constraints keep the system focused on correctness, observability, and safe concurrent execution under failure.
+
+---
+
 ## Why This Project Stands Out
 
 This project demonstrates real distributed systems thinking, safe concurrency handling, practical fault-tolerance mechanisms, and clean scalable backend design aligned with FAANG-level SWE expectations.
@@ -242,8 +297,21 @@ The system is intentionally scoped to be deep rather than broad, focusing on the
 
 ---
 
+## Future Extensions
+
+Potential extensions that fit naturally into the existing architecture:
+
+- Job prioritization and queue partitioning
+- Rate-limited worker pools
+- Pluggable execution backends
+- Metrics and tracing integration (Prometheus / OpenTelemetry)
+- Dead-letter queues for permanently failed jobs
+
+---
+
 ## Author
 
 Vidhi Babariya  
 Software Engineer - Backend and Distributed Systems
+
 
